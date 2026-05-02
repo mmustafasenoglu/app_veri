@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  filedrop:
+    build: .
+    container_name: filedrop
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - filedrop_uploads:/app/server/uploads
+
+volumes:
+  filedrop_uploads:

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API = import.meta.env.PROD ? "" : "http://localhost:3001";
 
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + " B";

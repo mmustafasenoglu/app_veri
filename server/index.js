@@ -15,6 +15,7 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 // In-memory room store: { [code]: { files: [], createdAt, totalSize } }
 const rooms = {};
@@ -144,6 +145,11 @@ app.delete('/api/rooms/:code/files/:fileId', (req, res) => {
   room.totalSize -= fileInfo.size;
   room.files.splice(idx, 1);
   res.json({ success: true });
+});
+
+// Serve React App for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 app.listen(PORT, () => console.log(`FileDrop server running on port ${PORT}`));
