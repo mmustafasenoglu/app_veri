@@ -24,6 +24,8 @@ body {
   min-height: 100vh;
 }
 
+/* ── Layout ─────────────────────────────────────────────── */
+
 .page {
   min-height: 100vh;
   display: flex;
@@ -40,6 +42,8 @@ body {
   align-items: center;
   gap: 2rem;
 }
+
+/* ── Logo ───────────────────────────────────────────────── */
 
 .logo {
   display: flex;
@@ -59,6 +63,7 @@ body {
   font-weight: 600;
   font-size: 18px;
   border-radius: 12px;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .logo-text {
@@ -73,6 +78,8 @@ body {
   text-align: center;
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* ── Home Cards ─────────────────────────────────────────── */
 
 .card-grid {
   display: grid;
@@ -90,11 +97,11 @@ body {
   flex-direction: column;
   gap: 8px;
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.1s;
+  transition: border-color 0.15s, transform 0.15s;
   text-align: left;
 }
 
-.action-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.action-card:hover { border-color: var(--border2); transform: translateY(-2px); }
 .action-card.primary { border-color: var(--accent); }
 .action-card.primary:hover { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 
@@ -105,15 +112,10 @@ body {
   font-weight: 600;
 }
 
-.card-label {
-  font-size: 16px;
-  font-weight: 700;
-}
+.card-label { font-size: 16px; font-weight: 700; }
+.card-sub { font-size: 13px; color: var(--text2); }
 
-.card-sub {
-  font-size: 13px;
-  color: var(--text2);
-}
+/* ── Code Input ─────────────────────────────────────────── */
 
 .code-input-row {
   display: flex;
@@ -154,6 +156,27 @@ body {
 
 .join-btn:hover { opacity: 0.85; }
 
+/* ── Feature Pills ──────────────────────────────────────── */
+
+.features-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.feature-pill {
+  font-size: 12px;
+  color: var(--text3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Error Box ──────────────────────────────────────────── */
+
 .error-box {
   background: color-mix(in srgb, var(--danger) 15%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
@@ -164,19 +187,22 @@ body {
   width: 100%;
 }
 
-/* Room */
+/* ── Room Layout ────────────────────────────────────────── */
+
 .room-layout {
   width: 100%;
-  max-width: 680px;
+  max-width: 720px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
+
+/* ── Room Header ────────────────────────────────────────── */
 
 .room-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .back-btn {
@@ -189,6 +215,7 @@ body {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 
 .back-btn:hover { color: var(--text); border-color: var(--border2); }
@@ -198,28 +225,44 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 16px;
+  padding: 9px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   transition: border-color 0.15s;
+  min-width: 0;
 }
 
 .room-code-badge:hover { border-color: var(--accent); }
 
-.badge-label { font-size: 12px; color: var(--text3); }
+.badge-label { font-size: 11px; color: var(--text3); flex-shrink: 0; }
 
 .badge-code {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: 6px;
   color: var(--accent);
   flex: 1;
 }
 
-.badge-copy { font-size: 16px; color: var(--text2); }
+.badge-copy { font-size: 16px; color: var(--text2); flex-shrink: 0; }
+
+.qr-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.qr-btn:hover { color: var(--accent); border-color: var(--accent); }
 
 .timer {
   font-family: 'JetBrains Mono', monospace;
@@ -228,17 +271,25 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.timer.timer-warn { color: var(--warn); border-color: var(--warn); }
+.timer.timer-warn { color: var(--warn); border-color: var(--warn); animation: pulse-warn 1s ease-in-out infinite; }
+
+@keyframes pulse-warn {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ── Drop Zone ──────────────────────────────────────────── */
 
 .drop-zone {
   border: 1.5px dashed var(--border2);
   border-radius: 16px;
   background: var(--surface);
-  padding: 3rem 2rem;
+  padding: 2.5rem 2rem;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -246,20 +297,29 @@ body {
 
 .drop-zone:hover, .drop-zone.drop-active {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
 }
 
-.drop-zone.uploading { cursor: default; }
+.drop-zone.uploading { cursor: default; pointer-events: none; }
 
-.drop-content { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.drop-content { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
 .drop-icon {
-  font-size: 32px;
+  font-size: 30px;
   font-family: 'JetBrains Mono', monospace;
   color: var(--accent);
+  animation: bounce-up 2s ease-in-out infinite;
+}
+
+@keyframes bounce-up {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 .drop-text { font-size: 15px; color: var(--text2); }
+.drop-hint { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
+/* ── Upload Progress ────────────────────────────────────── */
 
 .upload-progress {
   display: flex;
@@ -281,13 +341,28 @@ body {
   height: 100%;
   background: var(--accent);
   transition: width 0.2s;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.upload-pct {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+/* ── Storage Bar ────────────────────────────────────────── */
+
+.storage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .storage-bar {
+  flex: 1;
   height: 4px;
   background: var(--border);
   border-radius: 99px;
-  position: relative;
   overflow: hidden;
 }
 
@@ -299,27 +374,64 @@ body {
 }
 
 .storage-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text3);
   font-family: 'JetBrains Mono', monospace;
-  margin-top: 6px;
-  display: block;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.file-list {
+/* ── File List Header ───────────────────────────────────── */
+
+.file-list-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
+
+.file-list-title {
+  font-size: 13px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.download-all-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.download-all-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* ── File List ──────────────────────────────────────────── */
+
+.file-list { display: flex; flex-direction: column; gap: 8px; }
 
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   text-align: center;
   color: var(--text3);
   font-size: 14px;
-  padding: 2rem;
+  padding: 2.5rem;
   border: 1px dashed var(--border);
   border-radius: 12px;
 }
+
+.empty-icon { font-size: 28px; }
 
 .file-row {
   display: flex;
@@ -329,10 +441,21 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 16px;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.3s;
 }
 
 .file-row:hover { border-color: var(--border2); }
+
+.file-row-new {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent) !important;
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface)) !important;
+  animation: slide-in 0.3s ease;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .file-icon { font-size: 20px; flex-shrink: 0; }
 
@@ -362,15 +485,86 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   flex-shrink: 0;
   color: var(--text2);
 }
 
 .file-btn.download:hover { background: color-mix(in srgb, var(--accent) 15%, transparent); border-color: var(--accent); color: var(--accent); }
-.file-btn.delete:hover { background: color-mix(in srgb, var(--danger) 15%, transparent); border-color: var(--danger); color: var(--danger); }
+.file-btn.delete:hover   { background: color-mix(in srgb, var(--danger) 15%, transparent); border-color: var(--danger); color: var(--danger); }
 
-@media (max-width: 500px) {
+/* ── QR Modal ───────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.15s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: scale-in 0.18s ease;
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.modal-title { font-size: 18px; font-weight: 700; }
+.modal-sub   { font-size: 13px; color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+
+.qr-canvas {
+  border-radius: 12px;
+  border: 3px solid var(--border2);
+}
+
+.modal-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 8px;
+  color: var(--accent);
+}
+
+.modal-close {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text2);
+  padding: 8px 20px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  margin-top: 4px;
+  transition: color 0.15s;
+}
+
+.modal-close:hover { color: var(--text); }
+
+/* ── Responsive ─────────────────────────────────────────── */
+
+@media (max-width: 520px) {
   .card-grid { grid-template-columns: 1fr; }
-  .badge-code { letter-spacing: 3px; font-size: 18px; }
+  .badge-code { letter-spacing: 3px; font-size: 16px; }
+  .room-header { flex-wrap: wrap; }
+  .features-row { gap: 6px; }
 }

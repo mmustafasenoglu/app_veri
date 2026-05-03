@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { io } from "socket.io-client";
+import QRCode from "qrcode";
 
 const API = import.meta.env.PROD ? "" : "http://localhost:3001";
+const SOCKET_URL = import.meta.env.PROD ? "/" : "http://localhost:3001";
+
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + " B";
@@ -10,11 +15,12 @@ function formatSize(bytes) {
 }
 
 function formatTime(ms) {
-  const s = Math.floor(ms / 1000);
-  const m = Math.floor(s / 60);
-  const h = Math.floor(m / 60);
-  if (h > 0) return `${h}s ${m % 60}d`;
-  if (m > 0) return `${m}d ${s % 60}s`;
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}sa ${m}dk`;
+  if (m > 0) return `${m}dk ${s}s`;
   return `${s}s`;
 }
 
@@ -28,11 +34,41 @@ function getFileIcon(name) {
   if (["doc", "docx"].includes(ext)) return "📝";
   if (["xls", "xlsx"].includes(ext)) return "📊";
   if (["ppt", "pptx"].includes(ext)) return "📑";
+  if (["js", "ts", "jsx", "tsx", "py", "go", "rs", "cpp", "c", "java"].includes(ext)) return "💻";
   return "📁";
 }
 
+// ── QR Modal ───────────────────────────────────────────────────────────────
+
+function QRModal({ code, onClose }) {
+  const canvasRef = useRef();
+
+  useEffect(() => {
+    const url = `${window.location.origin}?join=${code}`;
+    QRCode.toCanvas(canvasRef.current, url, {
+      width: 220,
+      margin: 2,
+      color: { dark: "#e8ff47", light: "#161616" }
+    });
+  }, [code]);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <div className="modal-title">QR ile Paylaş</div>
+        <div className="modal-sub">Kamerayı tut, oda açılsın</div>
+        <canvas ref={canvasRef} className="qr-canvas" />
+        <div className="modal-code">{code}</div>
+        <button className="modal-close" onClick={onClose}>Kapat</button>
+      </div>
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────────────────────
+
 export default function App() {
-  const [screen, setScreen] = useState("home"); // home | room
+  const [screen, setScreen] = useState("home");
   const [codeInput, setCodeInput] = useState("");
   const [room, setRoom] = useState(null);
   const [error, setError] = useState("");
@@ -41,48 +77,99 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const [copied, setCopied] = useState(false);
-  const fileRef = useRef();
-  const pollRef = useRef();
-  const timerRef = useRef();
+  const [showQR, setShowQR] = useState(false);
+  const [newFileIds, setNewFileIds] = useState(new Set());
 
-  const fetchRoom = useCallback(async (code) => {
-    try {
-      const res = await fetch(`${API}/api/rooms/${code}`);
-      if (!res.ok) {
-        setScreen("home");
-        setRoom(null);
-        setError("Oda bulunamadı veya süresi doldu.");
-        return;
-      }
-      const data = await res.json();
-      setRoom(data);
-      setTimeLeft(data.expiresAt - Date.now());
-    } catch {
-      setError("Sunucuya bağlanılamadı.");
+  const fileRef = useRef();
+  const timerRef = useRef();
+  const socketRef = useRef(null);
+
+  // ── Check URL param ?join=XXXXXX ──
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinCode = params.get("join");
+    if (joinCode && /^\d{6}$/.test(joinCode)) {
+      setCodeInput(joinCode);
+      handleJoinRoom(joinCode);
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
 
+  // ── Socket.io ─────────────────────────────────────────────
+  const connectSocket = useCallback((code) => {
+    if (socketRef.current) socketRef.current.disconnect();
+
+    const socket = io(SOCKET_URL, { transports: ["websocket"] });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      socket.emit("join_room", code);
+    });
+
+    socket.on("files_updated", ({ files, totalSize }) => {
+      setRoom(prev => {
+        if (!prev) return prev;
+        // Highlight newly added files
+        const prevIds = new Set(prev.files.map(f => f.id));
+        const added = files.filter(f => !prevIds.has(f.id)).map(f => f.id);
+        if (added.length) {
+          setNewFileIds(ids => {
+            const next = new Set([...ids, ...added]);
+            setTimeout(() => {
+              setNewFileIds(cur => {
+                const cleared = new Set(cur);
+                added.forEach(id => cleared.delete(id));
+                return cleared;
+              });
+            }, 1800);
+            return next;
+          });
+        }
+        return { ...prev, files, totalSize };
+      });
+    });
+
+    socket.on("room_expired", () => {
+      cleanup();
+      setError("Odanın süresi doldu. Tüm dosyalar silindi.");
+    });
+
+    return socket;
+  }, []);
+
+  function cleanup() {
+    if (socketRef.current) { socketRef.current.disconnect(); socketRef.current = null; }
+    clearInterval(timerRef.current);
+    setScreen("home");
+    setRoom(null);
+    setTimeLeft(null);
+  }
+
+  // ── Countdown timer ───────────────────────────────────────
   useEffect(() => {
-    if (screen !== "room" || !room) return;
-    pollRef.current = setInterval(() => fetchRoom(room.code), 5000);
+    if (screen !== "room" || !room?.expiresAt) return;
+    clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1000) {
-          clearInterval(pollRef.current);
-          clearInterval(timerRef.current);
-          setScreen("home");
-          setRoom(null);
-          setError("Odanın süresi doldu. Tüm dosyalar silindi.");
-          return 0;
-        }
-        return prev - 1000;
+        const next = prev - 1000;
+        if (next <= 0) { clearInterval(timerRef.current); return 0; }
+        return next;
       });
     }, 1000);
-    return () => {
-      clearInterval(pollRef.current);
-      clearInterval(timerRef.current);
-    };
-  }, [screen, room?.code, fetchRoom]);
+    return () => clearInterval(timerRef.current);
+  }, [screen, room?.expiresAt]);
+
+  // ── API helpers ───────────────────────────────────────────
+  const fetchRoom = useCallback(async (code) => {
+    try {
+      const res = await fetch(`${API}/api/rooms/${code}`);
+      if (!res.ok) { setError("Oda bulunamadı veya süresi doldu."); return null; }
+      return await res.json();
+    } catch {
+      setError("Sunucuya bağlanılamadı.");
+      return null;
+    }
+  }, []);
 
   async function createRoom() {
     setError("");
@@ -92,20 +179,29 @@ export default function App() {
       setRoom(data);
       setTimeLeft(data.expiresAt - Date.now());
       setScreen("room");
+      connectSocket(data.code);
     } catch {
       setError("Oda oluşturulamadı. Sunucu bağlantısını kontrol et.");
     }
   }
 
-  async function joinRoom() {
+  async function handleJoinRoom(code) {
     setError("");
+    const data = await fetchRoom(code);
+    if (!data) return;
+    setRoom(data);
+    setTimeLeft(data.expiresAt - Date.now());
+    setScreen("room");
+    connectSocket(code);
+  }
+
+  async function joinRoom() {
     const code = codeInput.trim();
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
       setError("6 haneli bir sayı gir.");
       return;
     }
-    await fetchRoom(code);
-    setScreen("room");
+    await handleJoinRoom(code);
   }
 
   async function uploadFiles(files) {
@@ -118,8 +214,8 @@ export default function App() {
       const form = new FormData();
       form.append("file", file);
       try {
-        const xhr = new XMLHttpRequest();
         await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
           xhr.upload.onprogress = e => {
             if (e.lengthComputable) {
               const pct = Math.round(((done + e.loaded / e.total) / files.length) * 100);
@@ -137,16 +233,18 @@ export default function App() {
     }
     setUploading(false);
     setUploadProgress(0);
-    await fetchRoom(room.code);
   }
 
   async function deleteFile(fileId) {
     await fetch(`${API}/api/rooms/${room.code}/files/${fileId}`, { method: "DELETE" });
-    await fetchRoom(room.code);
   }
 
   function downloadFile(file) {
     window.open(`${API}/api/rooms/${room.code}/files/${file.id}`, "_blank");
+  }
+
+  function downloadAll() {
+    window.open(`${API}/api/rooms/${room.code}/download-all`, "_blank");
   }
 
   function copyCode() {
@@ -164,6 +262,7 @@ export default function App() {
 
   const usedPct = room ? Math.min(100, ((room.totalSize || 0) / (1024 ** 3)) * 100) : 0;
 
+  // ── Home Screen ───────────────────────────────────────────
   if (screen === "home") {
     return (
       <div className="page">
@@ -188,6 +287,7 @@ export default function App() {
               <span className="card-label">Odaya Katıl</span>
               <div className="code-input-row">
                 <input
+                  id="room-code-input"
                   className="code-input"
                   placeholder="000000"
                   maxLength={6}
@@ -195,26 +295,41 @@ export default function App() {
                   onChange={e => setCodeInput(e.target.value.replace(/\D/g, ""))}
                   onKeyDown={e => e.key === "Enter" && joinRoom()}
                 />
-                <button className="join-btn" onClick={joinRoom}>Gir →</button>
+                <button id="join-btn" className="join-btn" onClick={joinRoom}>Gir →</button>
               </div>
             </div>
+          </div>
+
+          <div className="features-row">
+            <span className="feature-pill">🔒 Şifresiz, anonim</span>
+            <span className="feature-pill">⚡ Gerçek zamanlı</span>
+            <span className="feature-pill">📦 1 GB oda</span>
           </div>
         </div>
       </div>
     );
   }
 
+  // ── Room Screen ───────────────────────────────────────────
   return (
     <div className="page">
+      {showQR && <QRModal code={room?.code} onClose={() => setShowQR(false)} />}
+
       <div className="room-layout">
         <header className="room-header">
-          <button className="back-btn" onClick={() => { setScreen("home"); setRoom(null); }}>← Geri</button>
+          <button className="back-btn" onClick={() => { cleanup(); }}>← Geri</button>
+
           <div className="room-code-badge" onClick={copyCode} title="Kopyala">
             <span className="badge-label">Oda Kodu</span>
             <span className="badge-code">{room?.code}</span>
             <span className="badge-copy">{copied ? "✓" : "⧉"}</span>
           </div>
-          <div className={`timer ${timeLeft < 300000 ? "timer-warn" : ""}`}>
+
+          <button className="qr-btn" onClick={() => setShowQR(true)} title="QR Kod">
+            <span>▦</span>
+          </button>
+
+          <div className={`timer ${timeLeft !== null && timeLeft < 300000 ? "timer-warn" : ""}`}>
             {timeLeft != null ? `⏱ ${formatTime(timeLeft)}` : "—"}
           </div>
         </header>
@@ -238,28 +353,48 @@ export default function App() {
           {uploading ? (
             <div className="upload-progress">
               <div className="progress-bar"><div className="progress-fill" style={{ width: `${uploadProgress}%` }} /></div>
-              <span>{uploadProgress}%</span>
+              <span className="upload-pct">{uploadProgress}%</span>
             </div>
           ) : (
             <div className="drop-content">
               <span className="drop-icon">↑</span>
               <span className="drop-text">{dragging ? "Bırak!" : "Dosya yükle veya sürükle"}</span>
+              <span className="drop-hint">Birden fazla dosya seçebilirsin</span>
             </div>
           )}
         </div>
 
-        <div className="storage-bar">
-          <div className="storage-fill" style={{ width: `${usedPct}%` }} />
-          <span className="storage-label">{formatSize(room?.totalSize || 0)} / 1 GB kullanıldı</span>
+        <div className="storage-row">
+          <div className="storage-bar">
+            <div className="storage-fill" style={{ width: `${usedPct}%` }} />
+          </div>
+          <span className="storage-label">{formatSize(room?.totalSize || 0)} / 1 GB</span>
+        </div>
+
+        <div className="file-list-header">
+          <span className="file-list-title">
+            Dosyalar {room?.files?.length ? `(${room.files.length})` : ""}
+          </span>
+          {room?.files?.length > 1 && (
+            <button className="download-all-btn" onClick={downloadAll}>
+              ↓ Tümünü ZIP İndir
+            </button>
+          )}
         </div>
 
         <div className="file-list">
           {(!room?.files || room.files.length === 0) ? (
-            <div className="empty-state">Henüz dosya yok. Yukarıdan yükle.</div>
+            <div className="empty-state">
+              <span className="empty-icon">📂</span>
+              <span>Henüz dosya yok. Yukarıdan yükle.</span>
+            </div>
           ) : room.files.map(f => (
-            <div className="file-row" key={f.id}>
+            <div
+              className={`file-row ${newFileIds.has(f.id) ? "file-row-new" : ""}`}
+              key={f.id}
+            >
               <span className="file-icon">{getFileIcon(f.originalName)}</span>
-              <span className="file-name">{f.originalName}</span>
+              <span className="file-name" title={f.originalName}>{f.originalName}</span>
               <span className="file-size">{formatSize(f.size)}</span>
               <button className="file-btn download" onClick={() => downloadFile(f)} title="İndir">↓</button>
               <button className="file-btn delete" onClick={() => deleteFile(f.id)} title="Sil">×</button>
