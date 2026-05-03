@@ -94,7 +94,7 @@ app.post('/api/rooms', (req, res) => {
   do { code = generateCode(); } while (rooms[code]);
   rooms[code] = { files: [], createdAt: Date.now(), totalSize: 0 };
   fs.mkdirSync(getRoomDir(code), { recursive: true });
-  res.json({ code, expiresAt: rooms[code].createdAt + ROOM_TTL });
+  res.json({ code, expiresAt: rooms[code].createdAt + ROOM_TTL, files: [], totalSize: 0 });
 });
 
 // Join room

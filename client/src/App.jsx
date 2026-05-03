@@ -108,7 +108,7 @@ export default function App() {
 
     socket.on("files_updated", ({ files, totalSize }) => {
       setRoom(prev => {
-        if (!prev) return prev;
+        if (!prev || !Array.isArray(prev.files)) return { ...prev, files, totalSize };
         // Highlight newly added files
         const prevIds = new Set(prev.files.map(f => f.id));
         const added = files.filter(f => !prevIds.has(f.id)).map(f => f.id);
@@ -375,9 +375,14 @@ export default function App() {
           <span className="file-list-title">
             Dosyalar {room?.files?.length ? `(${room.files.length})` : ""}
           </span>
+          {room?.files?.length === 1 && (
+            <button className="download-all-btn" onClick={() => downloadFile(room.files[0])}>
+              ↓ İndir
+            </button>
+          )}
           {room?.files?.length > 1 && (
             <button className="download-all-btn" onClick={downloadAll}>
-              ↓ Tümünü ZIP İndir
+              ↓ ZIP İndir ({room.files.length} dosya)
             </button>
           )}
         </div>
