@@ -17,9 +17,11 @@
 
 ## 🌟 Projenin Amacı ve Hikayesi
 
-**FileDrop**, cihazlar (mobil ve masaüstü) arasında dosya paylaşımını olabildiğince *hızlı, kolay ve engelsiz* hale getirmek amacıyla geliştirilmiştir. Büyük boyutlu dosyaları aktarırken yaşanan "dosya boyutu limiti", "yavaş aktarım hızı" veya "karmaşık arayüzler" gibi problemleri tamamen ortadan kaldırmayı hedefler.
+**FileDrop**'un ana çıkış noktası ve en büyük amacı; **kırtasiye, okul veya fotokopicilerde çıktı alırken ortak bilgisayarlara WhatsApp Web (veya mail) girişi yapma zorunluluğunu ve kişisel hesapları açık unutma riskini tamamen ortadan kaldırmaktır.**
 
-İster telefonunuzdan bilgisayarınıza hızlıca bir fotoğraf atın, ister çalışma arkadaşınızla devasa boyutlu bir projeyi saniyeler içinde paylaşın. **Aynı ağa bağlı olma zorunluluğu yoktur**, sistem modern web teknolojileri sayesinde tamamen gerçek zamanlı (real-time) çalışır.
+Ortak ve güvensiz bilgisayarlara kişisel hesaplarınızı bağlamadan, QR kod ile veya 6 haneli oda koduyla saniyeler içinde geçici bir odaya girebilir, çıktı alacağınız dosyayı aktarabilir ve işiniz bittiğinde dosyalarınızla birlikte tamamen anonim bir şekilde ayrılabilirsiniz. Ayrıca büyük boyutlu dosyaları aktarırken yaşanan "boyut limiti" veya "yavaş aktarım" gibi problemleri de ortadan kaldırır.
+
+İster kırtasiyede hızlıca bir PDF çıkartın, ister çalışma arkadaşınızla devasa boyutlu bir projeyi saniyeler içinde paylaşın. **Aynı ağa bağlı olma zorunluluğu yoktur**, sistem modern web teknolojileri sayesinde tamamen gerçek zamanlı (real-time) çalışır.
 
 ---
 
