@@ -1,91 +1,122 @@
-# FileDrop 📁
+<div align="center">
+  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/File%20Folder.png" alt="FileDrop Logo" width="100" />
+  
+  # 🚀 FileDrop: Yeni Nesil Gerçek Zamanlı Dosya Paylaşım Platformu
 
-Şifreli, geçici dosya transfer uygulaması.  
-6 haneli oda kodu — 1 saat sonra tüm dosyalar otomatik silinir — max 1 GB.
+  **Kızlı, Güvenli ve Sınırsız Dosya Transferi!**
+
+  [![React](https://img.shields.io/badge/React-18.2.0-blue.svg?style=flat&logo=react)](https://reactjs.org/)
+  [![Node.js](https://img.shields.io/badge/Node.js-Backend-green.svg?style=flat&logo=nodedotjs)](https://nodejs.org/)
+  [![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-black.svg?style=flat&logo=socketdotio)](https://socket.io/)
+  [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED.svg?style=flat&logo=docker)](https://www.docker.com/)
+
+  [Özellikler](#-özellikler) • [Nasıl Çalışır?](#%EF%B8%8F-nasıl-çalışır) • [Kurulum](#%EF%B8%8F-kurulum) • [Teknolojiler](#%EF%B8%8F-kullanılan-teknolojiler)
+</div>
 
 ---
 
-## Kurulum
+## 🌟 Projenin Amacı ve Hikayesi
 
-### 1. Backend (server)
+**FileDrop**, cihazlar (mobil ve masaüstü) arasında dosya paylaşımını olabildiğince *hızlı, kolay ve engelsiz* hale getirmek amacıyla geliştirilmiştir. Büyük boyutlu dosyaları aktarırken yaşanan "dosya boyutu limiti", "yavaş aktarım hızı" veya "karmaşık arayüzler" gibi problemleri tamamen ortadan kaldırmayı hedefler.
 
+İster telefonunuzdan bilgisayarınıza hızlıca bir fotoğraf atın, ister çalışma arkadaşınızla devasa boyutlu bir projeyi saniyeler içinde paylaşın. **Aynı ağa bağlı olma zorunluluğu yoktur**, sistem modern web teknolojileri sayesinde tamamen gerçek zamanlı (real-time) çalışır.
+
+---
+
+## 📸 Ekran Görüntüleri
+
+*Buraya projenin çalıştığı anlara ait ekran görüntülerini ekleyebilirsiniz.*
+
+<div align="center">
+  <img src="assets/screenshot1.png" alt="Ana Ekran Görünümü" width="400" />
+  <img src="assets/screenshot2.png" alt="Dosya Yükleme Ekranı" width="400" />
+</div>
+
+---
+
+## ✨ Özellikler
+
+- ⚡ **Gerçek Zamanlı (Real-Time) Senkronizasyon:** Yüklenen dosyalar anında tüm bağlı ekranlarda belirir. Sayfa yenilemeye gerek kalmaz!
+- 📱 **QR Kod İle Hızlı Paylaşım:** Mobil cihazlardan kolay erişim için otomatik QR kod oluşturucu. Telefon kamerasını okutun ve hemen dosya gönderin/alın.
+- 📦 **Toplu İndirme (ZIP):** Yüklenen çoklu dosyaları tek bir tıklama ile `.zip` arşivi olarak indirebilme kolaylığı.
+- 🚀 **Chunked Upload (Parçalı Yükleme):** Büyük medya dosyalarını (video vb.) parçalara bölerek yükleme özelliği sayesinde sunucu/proxy boyut sınırlarına (Cloudflare vb.) takılmaz.
+- 🐳 **Docker Desteği:** Tek komutla kur ve çalıştır (`docker-compose up -d`).
+- 🎨 **Modern ve Responsive Tasarım:** Hem mobil hem masaüstü cihazlar için optimize edilmiş, göz yormayan şık UI.
+
+---
+
+## 🛠️ Kullanılan Teknolojiler
+
+### 🖥️ Frontend (İstemci)
+* **React & Vite:** Çok hızlı derleme ve akıcı kullanıcı deneyimi.
+* **Socket.io-Client:** Anlık veri senkronizasyonu.
+* **QRCode:** Mobil cihazların sisteme entegrasyonu.
+* **Vanilla CSS:** Özelleştirilmiş, animasyonlu modern tasarım.
+
+### ⚙️ Backend (Sunucu)
+* **Node.js & Express.js:** Güçlü ve hızlı API altyapısı.
+* **Socket.io:** Çift yönlü anlık iletişim katmanı.
+* **Multer:** Gelişmiş dosya yükleme (Multipart/form-data) yönetimi.
+* **Archiver:** Anlık olarak dosyaları sıkıştırıp `.zip` formatında sunma.
+
+---
+
+## ⚙️ Kurulum ve Çalıştırma
+
+Projeyi lokalinizde veya kendi sunucunuzda ayağa kaldırmak çok kolaydır.
+
+### Seçenek 1: Docker İle (Önerilen) 🐳
+
+Sisteminizde `Docker` ve `Docker Compose` kuruluysa, sadece şu komutu çalıştırmanız yeterlidir:
+
+```bash
+docker-compose up -d --build
+```
+Uygulama `http://localhost:3001` adresinde yayına girecektir. 
+
+### Seçenek 2: Manuel Kurulum (Geliştirici Modu) 💻
+
+**1. Repoyu Klonlayın:**
+```bash
+git clone https://github.com/KULLANICI_ADINIZ/filedrop.git
+cd filedrop
+```
+
+**2. Backend Kurulumu:**
 ```bash
 cd server
 npm install
-node index.js
+npm run dev
 ```
 
-Sunucu `3001` portunda çalışır. Port değiştirmek için:
-```bash
-PORT=5000 node index.js
-```
-
----
-
-### 2. Frontend (client)
-
-`.env.example` dosyasını kopyala ve düzenle:
+**3. Frontend Kurulumu:**
+Yeni bir terminal sekmesi açın:
 ```bash
 cd client
-cp .env.example .env
-```
-
-`.env` içinde `VITE_API_URL`'i sunucunun gerçek adresine yaz:
-```
-VITE_API_URL=https://senindomain.com
-```
-
-Sonra:
-```bash
 npm install
-npm run build
-```
-
-`dist/` klasörünü hosting'indeki public HTML dizinine at (cPanel'de `public_html`).
-
----
-
-### 3. Production için Nginx örneği
-
-```nginx
-server {
-    listen 80;
-    server_name senindomain.com;
-
-    # Frontend
-    root /var/www/filedrop/dist;
-    index index.html;
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Backend proxy
-    location /api {
-        proxy_pass http://localhost:3001;
-        proxy_set_header Host $host;
-        client_max_body_size 1G;
-    }
-}
+npm run dev
 ```
 
 ---
 
-### 4. PM2 ile sunucuyu arka planda çalıştır
+## ☁️ Production (Canlı Ortam) Dağıtımı
 
-```bash
-npm install -g pm2
-cd server
-pm2 start index.js --name filedrop
-pm2 save
-pm2 startup
-```
+FileDrop, **Cloudflare Tunnels** ve **VDS** yapılarına tamamen uyumludur. Büyük dosya yüklemeleri için Nginx/Cloudflare taraflı `client_max_body_size` hatalarını aşmak adına projede **"Chunked Upload"** mimarisi kullanılmıştır.
 
 ---
 
-## Kullanım
+## 🤝 Katkıda Bulunma
 
-1. Kırtasiyedeki bilgisayarda siteye gir → **Yeni Oda Oluştur**
-2. 6 haneli kodu karşı tarafa gönder (WhatsApp, SMS, sesli söyle)
-3. Karşı taraf siteye girer → **Odaya Katıl** → kodu yazar
-4. Dosyaları yükle veya indir
-5. 1 saat sonra her şey otomatik silinir ✓
+1. Bu repoyu forklayın (`Fork`).
+2. Özellik dalınızı oluşturun (`git checkout -b feature/YeniOzellik`).
+3. Değişikliklerinizi commit'leyin (`git commit -m 'Harika bir özellik eklendi'`).
+4. Dalınızı push'layın (`git push origin feature/YeniOzellik`).
+5. Bir **Pull Request** açın.
+
+---
+
+<div align="center">
+  <p><i>Sevgiyle ve ☕ ile geliştirildi.</i></p>
+  
+  #filedrop #reactjs #nodejs #socketio #realtime #dosyapaylasimi #docker #webdevelopment #javascript #opensource #filetransfer
+</div>
