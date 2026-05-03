@@ -162,15 +162,13 @@ app.post('/api/rooms/:code/upload/chunk', uploadChunk.single('chunk'), (req, res
 
   // Verify total size limit
   if (room.totalSize + parseInt(fileSize) > MAX_ROOM_SIZE) {
-     fs.unlinkSync(req.file.path);
      return res.status(400).json({ error: 'Room storage limit exceeded' });
   }
 
   const tempFilePath = path.join(getRoomDir(code), `${fileId}.tmp`);
   
-  // Append to temp file synchronously
-  fs.appendFileSync(tempFilePath, fs.readFileSync(req.file.path));
-  fs.unlinkSync(req.file.path); // remove multer temp chunk file
+  // Append chunk to temp file
+  fs.appendFileSync(tempFilePath, req.file.buffer);
 
   if (parseInt(chunkIndex) === parseInt(totalChunks) - 1) {
     // Last chunk received
