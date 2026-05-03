@@ -115,7 +115,7 @@ app.get('/api/rooms/:code', (req, res) => {
   });
 });
 
-// Upload file
+// Upload file (Legacy/Fallback)
 app.post('/api/rooms/:code/upload', (req, res) => {
   const { code } = req.params;
   const room = rooms[code];
@@ -148,6 +148,55 @@ app.post('/api/rooms/:code/upload', (req, res) => {
 
     res.json(fileInfo);
   });
+});
+
+// Upload chunk (For large files)
+const uploadChunk = multer({ limits: { fileSize: 50 * 1024 * 1024 } }); // 50MB max chunk
+app.post('/api/rooms/:code/upload/chunk', uploadChunk.single('chunk'), (req, res) => {
+  const { code } = req.params;
+  const room = rooms[code];
+  if (!room) return res.status(404).json({ error: 'Room not found' });
+  
+  const { fileId, chunkIndex, totalChunks, fileName, fileSize } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'No chunk data' });
+
+  // Verify total size limit
+  if (room.totalSize + parseInt(fileSize) > MAX_ROOM_SIZE) {
+     fs.unlinkSync(req.file.path);
+     return res.status(400).json({ error: 'Room storage limit exceeded' });
+  }
+
+  const tempFilePath = path.join(getRoomDir(code), `${fileId}.tmp`);
+  
+  // Append to temp file synchronously
+  fs.appendFileSync(tempFilePath, fs.readFileSync(req.file.path));
+  fs.unlinkSync(req.file.path); // remove multer temp chunk file
+
+  if (parseInt(chunkIndex) === parseInt(totalChunks) - 1) {
+    // Last chunk received
+    const finalStoredName = `${crypto.randomBytes(4).toString('hex')}-${fileName}`;
+    const finalPath = path.join(getRoomDir(code), finalStoredName);
+    fs.renameSync(tempFilePath, finalPath);
+    
+    room.totalSize += parseInt(fileSize);
+    const fileInfo = {
+      id: crypto.randomBytes(8).toString('hex'),
+      originalName: fileName,
+      storedName: finalStoredName,
+      size: parseInt(fileSize),
+      uploadedAt: Date.now()
+    };
+    room.files.push(fileInfo);
+    
+    io.to(code).emit('files_updated', {
+      files: room.files,
+      totalSize: room.totalSize
+    });
+    
+    return res.json({ completed: true, file: fileInfo });
+  }
+
+  res.json({ completed: false, chunkIndex });
 });
 
 // Download single file

@@ -209,26 +209,55 @@ export default function App() {
     setUploading(true);
     setUploadProgress(0);
     setError("");
-    let done = 0;
+
+    const CHUNK_SIZE = 25 * 1024 * 1024; // 25 MB
+    let totalBytes = Array.from(files).reduce((acc, f) => acc + f.size, 0);
+    let uploadedBytes = 0;
+
     for (const file of files) {
-      const form = new FormData();
-      form.append("file", file);
-      try {
-        await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.upload.onprogress = e => {
-            if (e.lengthComputable) {
-              const pct = Math.round(((done + e.loaded / e.total) / files.length) * 100);
-              setUploadProgress(pct);
-            }
-          };
-          xhr.onload = () => { done++; resolve(); };
-          xhr.onerror = () => reject(new Error("Upload failed"));
-          xhr.open("POST", `${API}/api/rooms/${room.code}/upload`);
-          xhr.send(form);
-        });
-      } catch {
-        setError(`"${file.name}" yüklenemedi.`);
+      const fileId = Math.random().toString(36).substring(2, 15);
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+        
+        const form = new FormData();
+        form.append("fileId", fileId);
+        form.append("chunkIndex", chunkIndex);
+        form.append("totalChunks", totalChunks);
+        form.append("fileName", file.name);
+        form.append("fileSize", file.size);
+        form.append("chunk", chunk);
+        
+        try {
+          await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.upload.onprogress = e => {
+              if (e.lengthComputable) {
+                const currentUploaded = uploadedBytes + e.loaded;
+                setUploadProgress(Math.round((currentUploaded / totalBytes) * 100));
+              }
+            };
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                uploadedBytes += (end - start);
+                resolve();
+              } else {
+                reject(new Error("Upload failed"));
+              }
+            };
+            xhr.onerror = () => reject(new Error("Network error"));
+            xhr.open("POST", `${API}/api/rooms/${room.code}/upload/chunk`);
+            xhr.send(form);
+          });
+        } catch {
+          setError(`"${file.name}" yüklenirken hata oluştu.`);
+          setUploading(false);
+          setUploadProgress(0);
+          return;
+        }
       }
     }
     setUploading(false);
