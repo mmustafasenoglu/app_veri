@@ -48,7 +48,7 @@ function QRModal({ code, onClose }) {
     QRCode.toCanvas(canvasRef.current, url, {
       width: 220,
       margin: 2,
-      color: { dark: "#e8ff47", light: "#161616" }
+      color: { dark: "#111111", light: "#ffffff" }
     });
   }, [code]);
 
@@ -301,9 +301,9 @@ export default function App() {
           </div>
 
           <div className="features-row">
-            <span className="feature-pill">🔒 Şifresiz, anonim</span>
-            <span className="feature-pill">⚡ Gerçek zamanlı</span>
-            <span className="feature-pill">📦 1 GB oda</span>
+            <span className="feature-pill">Şifresiz, anonim</span>
+            <span className="feature-pill">Gerçek zamanlı</span>
+            <span className="feature-pill">1 GB oda</span>
           </div>
         </div>
       </div>
